@@ -8,9 +8,10 @@
 - samples candidate frames
 - describes and scores frames with OpenAI vision + embeddings
 - selects either top-k salient frames or salience-density samples
-- writes copy-pasteable Markdown, JSON metadata, selected frame JPGs, and a ZIP
+- extracts the reusable cinematic grammar underneath the reference
+- writes copy-pasteable Markdown, a style bible, Blender/Remotion-ready shot specs, a Codex prompt, JSON metadata, selected frame JPGs, and a ZIP
 
-It ships as a CLI, MCP stdio server, and Next.js website.
+It ships as a CLI, MCP stdio server, and Next.js website. The goal is not just helping VLMs watch videos; it is turning reference cinema into executable production grammar for coding agents.
 
 ## Requirements
 
@@ -31,7 +32,7 @@ cp .env.example .env
 ## CLI
 
 ```bash
-npm run cli -- "https://www.youtube.com/watch?v=VIDEO_ID" -k 8 --mode density
+npm run cli -- "https://www.youtube.com/watch?v=VIDEO_ID" -k 8 --mode all
 ```
 
 Useful options:
@@ -40,15 +41,28 @@ Useful options:
 npm run cli -- "<url>" \
   --output .yt-view \
   --top-k 10 \
-  --mode top-k \
+  --selection-mode density \
+  --mode style \
   --candidate-interval 6 \
   --max-candidates 48 \
   --frame-width 768
 ```
 
+Output modes:
+
+- `watch`: transcript plus representative frame metadata
+- `style`: cinematic style bible
+- `shot-specs`: Blender/Remotion-ready shot specs
+- `prompt`: copy-pasteable Codex/Claude implementation prompt
+- `all`: all text artifacts separated by dividers
+
 The CLI prints the Markdown context and writes artifacts under `.yt-view/<job-id>/`:
 
 - `watch.md`
+- `style-bible.md`
+- `shot-specs.md`
+- `shot-specs.json`
+- `codex-prompt.md`
 - `metadata.json`
 - `yt-view-artifacts.zip`
 - `frames/*.jpg`
@@ -78,12 +92,13 @@ Arguments:
 - `url` required
 - `topK` default `8`
 - `mode` `density` or `top-k`
+- `outputMode` `watch`, `style`, `prompt`, `shot-specs`, or `all`
 - `candidateIntervalSeconds` default `8`
 - `maxCandidateFrames` default `36`
 - `frameWidth` default `768`
 - `outputDir` optional
 
-The tool returns Markdown plus selected frames as MCP image content and also writes local artifacts.
+The tool returns the requested text artifact plus selected frames as MCP image content and also writes local artifacts.
 
 ## Website
 
@@ -93,10 +108,40 @@ npm run dev
 
 Open `http://localhost:3000`, paste a YouTube URL, choose frame selection options, and run analysis. The result page includes:
 
-- copy button for the Markdown
+- tabs for watch pack, frames, style bible, shot specs, Codex prompt, and slop warnings
+- copy button for the active text tab
 - frame previews
 - per-frame downloads
 - ZIP download
+
+## Cinematic Grammar Compiler
+
+The extra outputs are designed for downstream generation systems.
+
+`style-bible.md` extracts the production grammar:
+
+- cinematic ontology
+- reference lineage
+- camera, lens, lighting, material, edit, typography, and sound language
+- narration register and forbidden phrases
+- reusable shot patterns
+- transfer rules for new products
+
+`shot-specs.json` makes the reference executable:
+
+- source frame and timestamp
+- shot type and purpose
+- lens, focal length, aperture, rig, movement, and focus behavior
+- lighting setup
+- material emphasis
+- Blender render passes
+- diffusion finishing intent
+- Remotion role
+- anti-slop forbidden moves
+
+`codex-prompt.md` is a direct implementation prompt for coding agents. It tells Codex/Claude to build a physically grounded Blender-first pipeline with diffusion as finishing and Remotion as editorial assembly, not as the visual substrate.
+
+`slopWarnings` are validator-ready rules that identify presentation-deck failure modes such as arbitrary floating UI, LinkedIn announcement language, missing lens metadata, and ungrounded abstract AI visuals.
 
 ## Vercel
 
