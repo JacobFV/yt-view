@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Stock — a warm bone leaf -->
+  <rect width="32" height="32" rx="4" fill="#e8e2d4"/>
+  <!-- Play head — the source video -->
+  <path d="M7.5 7 L7.5 25 L19 16 Z" fill="#c5341b"/>
+  <!-- Context lines — what the video resolves into -->
+  <g stroke="#211c17" stroke-width="2.6" stroke-linecap="square">
+    <line x1="21" y1="11" x2="27" y2="11"/>
+    <line x1="21" y1="16" x2="24.5" y2="16"/>
+    <line x1="21" y1="21" x2="27" y2="21"/>
+  </g>
+</svg>

@@ -16,7 +16,7 @@ export const maxDuration = 300;
  * so the API is discoverable instead of answering a bare 405.
  */
 const API_INFO = {
-  service: "youtube-to-context",
+  service: "yt2ctx",
   endpoint: "/api/analyze",
   method: "POST",
   summary:
@@ -96,7 +96,7 @@ async function runAnalysis(
   const result = await analyzeYoutubeVideo({
     ...body,
     // Vercel and most hosts only allow writes under the OS temp dir.
-    outputDir: path.join(os.tmpdir(), "youtube-to-context-web"),
+    outputDir: path.join(os.tmpdir(), "yt2ctx-web"),
     onProgress
   });
   const frames = await attachFrameDataUrls(result.frames);

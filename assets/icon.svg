@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Youtube to Context">
+  <title>Youtube to Context</title>
+
+  <!-- Stock — a warm bone leaf -->
+  <rect width="512" height="512" fill="#e8e2d4"/>
+
+  <!-- Viewfinder crop brackets — the editorial signature -->
+  <path d="M40 84 V40 H84" fill="none" stroke="#c5341b" stroke-width="6" stroke-linecap="square"/>
+  <path d="M472 428 V472 H428" fill="none" stroke="#c5341b" stroke-width="6" stroke-linecap="square"/>
+
+  <!-- The imprint — a play head resolving into context lines -->
+  <rect x="116" y="116" width="280" height="280" fill="none" stroke="#211c17" stroke-width="6"/>
+  <g transform="translate(60.25 94) scale(13.5)">
+    <path d="M6 4.5 L6 19.5 L15.5 12 Z" fill="#c5341b"/>
+    <g stroke="#211c17" stroke-width="2.4" stroke-linecap="square">
+      <line x1="18" y1="8" x2="23" y2="8"/>
+      <line x1="18" y1="12" x2="21" y2="12"/>
+      <line x1="18" y1="16" x2="23" y2="16"/>
+    </g>
+  </g>
+</svg>

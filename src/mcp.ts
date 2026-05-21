@@ -8,7 +8,7 @@ import { analyzeYoutubeVideo } from "./core/analyze";
 import type { FrameSelectionMode, OutputMode } from "./core/types";
 
 const server = new McpServer({
-  name: "youtube-to-context",
+  name: "yt2ctx",
   version: "1.0.0"
 });
 

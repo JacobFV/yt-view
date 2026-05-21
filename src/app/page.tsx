@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { STAGE_PLAN } from "../core/progress";
 import type { ProgressEvent } from "../core/types";
+import { SiteFooter, SiteHeader } from "./site-chrome";
 
 /* ------------------------------------------------------------------ *
  * Types — only the slice of the API payload the UI actually touches.  *
@@ -396,25 +397,7 @@ export default function Home() {
     <main className="app">
       <div className="aurora" aria-hidden="true" />
 
-      <header className="topbar">
-        <div className="brand">
-          <span className="brand-mark" aria-hidden="true">
-            <span className="brand-aperture" />
-          </span>
-          <span className="brand-text">
-            <span className="brand-name">youtube-to-context</span>
-            <span className="brand-tag">cinematic context compiler</span>
-          </span>
-        </div>
-        <nav className="topbar-links" aria-label="Resources">
-          <a className="ghost-link" href="https://github.com/JacobFV/youtube-to-context" target="_blank" rel="noreferrer">
-            GitHub
-          </a>
-          <span className="ghost-link ghost-link--static" title="POST /api/analyze">
-            API · NDJSON
-          </span>
-        </nav>
-      </header>
+      <SiteHeader />
 
       <section className="stage">
         {phase === "compose" ? (
@@ -472,10 +455,7 @@ export default function Home() {
         ) : null}
       </section>
 
-      <footer className="site-foot">
-        <span>Only analyze videos you have the right to download.</span>
-        <span>CLI · MCP server · Web — one pipeline.</span>
-      </footer>
+      <SiteFooter />
 
       {lightbox !== null && result ? (
         <Lightbox

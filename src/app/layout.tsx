@@ -3,13 +3,13 @@ import type { ReactNode } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "youtube-to-context — cinematic context compiler",
+  title: "Youtube to Context — cinematic context compiler",
   description:
     "Turn any YouTube video into a VLM-ready context pack: timed transcript, representative frames, and the cinematic grammar underneath — compiled into copy-paste artifacts for coding agents.",
   keywords: ["youtube", "transcription", "vision", "vlm", "mcp", "cinematic grammar"],
-  authors: [{ name: "youtube-to-context" }],
+  authors: [{ name: "Youtube to Context" }],
   openGraph: {
-    title: "youtube-to-context — cinematic context compiler",
+    title: "Youtube to Context — cinematic context compiler",
     description:
       "Timed transcript, the frames that matter, and reusable cinematic grammar — from any YouTube URL.",
     type: "website"

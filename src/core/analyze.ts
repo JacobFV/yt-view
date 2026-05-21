@@ -56,7 +56,7 @@ export async function analyzeYoutubeVideo(options: AnalyzeVideoOptions): Promise
     .randomBytes(4)
     .toString("hex")}-${slugify(info.title || info.id || "video")}`;
   const outputRoot = path.resolve(resolved.outputDir || defaultOutputDir(), jobId);
-  const workDir = await mkdtemp(path.join(os.tmpdir(), "youtube-to-context-"));
+  const workDir = await mkdtemp(path.join(os.tmpdir(), "yt2ctx-"));
 
   try {
     const videoPath = path.join(workDir, "video.mp4");
@@ -159,7 +159,7 @@ export async function analyzeYoutubeVideo(options: AnalyzeVideoOptions): Promise
         shotSpecsMarkdownPath: path.join(outputRoot, "shot-specs.md"),
         codexPromptPath: path.join(outputRoot, "codex-prompt.md"),
         metadataPath: path.join(outputRoot, "metadata.json"),
-        zipPath: path.join(outputRoot, "youtube-to-context-artifacts.zip"),
+        zipPath: path.join(outputRoot, "yt2ctx-artifacts.zip"),
         frameDir
       }
     };

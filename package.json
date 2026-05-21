@@ -1,11 +1,11 @@
 {
-  "name": "youtube-to-context",
+  "name": "yt2ctx",
   "version": "1.0.0",
   "description": "Turn YouTube videos into timed transcripts and representative frame packs for VLM context.",
   "type": "module",
   "bin": {
-    "youtube-to-context": "./dist/cli.js",
-    "youtube-to-context-mcp": "./dist/mcp.js"
+    "yt2ctx": "./dist/cli.js",
+    "yt2ctx-mcp": "./dist/mcp.js"
   },
   "main": "dist/index.js",
   "scripts": {
@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/JacobFV/youtube-to-context.git"
+    "url": "git+https://github.com/JacobFV/yt2ctx.git"
   },
   "keywords": [
     "youtube",
@@ -31,9 +31,9 @@
   "author": "",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/JacobFV/youtube-to-context/issues"
+    "url": "https://github.com/JacobFV/yt2ctx/issues"
   },
-  "homepage": "https://github.com/JacobFV/youtube-to-context#readme",
+  "homepage": "https://github.com/JacobFV/yt2ctx#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "commander": "^14.0.3",

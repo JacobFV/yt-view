@@ -36,7 +36,7 @@ function createCliReporter(enabled: boolean): ((event: ProgressEvent) => void) |
 const program = new Command();
 
 program
-  .name("youtube-to-context")
+  .name("yt2ctx")
   .description("Create a timed transcript and representative frame pack from a YouTube URL.")
   .argument("<url>", "YouTube video URL")
   .option("-o, --output <dir>", "output directory")
@@ -107,6 +107,6 @@ program
 
 program.parseAsync().catch((error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);
-  process.stderr.write(`youtube-to-context failed: ${message}\n`);
+  process.stderr.write(`yt2ctx failed: ${message}\n`);
   process.exit(1);
 });

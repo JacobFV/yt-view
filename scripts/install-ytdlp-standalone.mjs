@@ -39,7 +39,7 @@ async function main() {
 
   if (await fileLooksExecutable(binaryPath)) {
     const response = await fetch(`https://github.com/yt-dlp/yt-dlp/releases/latest/download/${asset}`, {
-      headers: { "User-Agent": "youtube-to-context-build" }
+      headers: { "User-Agent": "yt2ctx-build" }
     });
 
     if (!response.ok) {
