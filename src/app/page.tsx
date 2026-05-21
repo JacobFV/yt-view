@@ -11,6 +11,20 @@ type Frame = {
   dataUrl: string;
 };
 
+type SlopWarning = {
+  rule: string;
+  whyItBreaksTaste: string;
+  rejectIf: string;
+  preferredMove: string;
+};
+
+type Cinematic = {
+  styleMarkdown: string;
+  shotSpecMarkdown: string;
+  promptMarkdown: string;
+  slopWarnings: SlopWarning[];
+};
+
 type AnalyzeResponse = {
   id: string;
   metadata: {
@@ -20,8 +34,11 @@ type AnalyzeResponse = {
   };
   markdown: string;
   frames: Frame[];
+  cinematic: Cinematic;
   zipDataUrl: string;
 };
+
+type ResultTab = "watch" | "frames" | "style" | "shot-specs" | "prompt" | "warnings";
 
 function downloadDataUrl(dataUrl: string, fileName: string) {
   const anchor = document.createElement("a");
@@ -46,6 +63,7 @@ export default function Home() {
   const [candidateIntervalSeconds, setCandidateIntervalSeconds] = useState(8);
   const [maxCandidateFrames, setMaxCandidateFrames] = useState(36);
   const [result, setResult] = useState<AnalyzeResponse | null>(null);
+  const [activeTab, setActiveTab] = useState<ResultTab>("watch");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -73,6 +91,7 @@ export default function Home() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error || "Analysis failed");
       setResult(payload);
+      setActiveTab("style");
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "Analysis failed");
     } finally {
@@ -80,9 +99,26 @@ export default function Home() {
     }
   }
 
-  async function copyMarkdown() {
-    if (!result) return;
-    await navigator.clipboard.writeText(result.markdown);
+  function activeText(): string {
+    if (!result) return "";
+    if (activeTab === "style") return result.cinematic.styleMarkdown;
+    if (activeTab === "shot-specs") return result.cinematic.shotSpecMarkdown;
+    if (activeTab === "prompt") return result.cinematic.promptMarkdown;
+    if (activeTab === "warnings") {
+      return result.cinematic.slopWarnings
+        .map(
+          (warning) =>
+            `${warning.rule}\nWhy: ${warning.whyItBreaksTaste}\nReject if: ${warning.rejectIf}\nPrefer: ${warning.preferredMove}`
+        )
+        .join("\n\n");
+    }
+    return result.markdown;
+  }
+
+  async function copyActiveText() {
+    const text = activeText();
+    if (!text) return;
+    await navigator.clipboard.writeText(text);
     setCopied(true);
   }
 
@@ -170,7 +206,7 @@ export default function Home() {
                   </p>
                 </div>
                 <div className="actions">
-                  <button type="button" onClick={copyMarkdown}>
+                  <button type="button" onClick={copyActiveText}>
                     {copied ? "Copied" : "Copy text"}
                   </button>
                   <button type="button" onClick={() => downloadDataUrl(result.zipDataUrl, `${result.id}.zip`)}>
@@ -179,26 +215,81 @@ export default function Home() {
                 </div>
               </div>
 
-              <div className="frames">
-                {result.frames.map((frame) => (
-                  <article className="frameCard" key={frame.fileName}>
-                    <img src={frame.dataUrl} alt={frame.description} />
-                    <div>
-                      <div className="frameMeta">
-                        <strong>{formatTimestamp(frame.timestamp)}</strong>
-                        <span>{frame.score.toFixed(3)}</span>
-                      </div>
-                      <p>{frame.description}</p>
-                      <div className="tags">{frame.labels.map((label) => <span key={label}>{label}</span>)}</div>
-                      <button type="button" onClick={() => downloadDataUrl(frame.dataUrl, frame.fileName)}>
-                        Download frame
-                      </button>
-                    </div>
-                  </article>
+              <div className="tabs" aria-label="result tabs">
+                {[
+                  ["watch", "Watch Pack"],
+                  ["frames", "Frames"],
+                  ["style", "Style Bible"],
+                  ["shot-specs", "Shot Specs"],
+                  ["prompt", "Codex Prompt"],
+                  ["warnings", "Slop Warnings"]
+                ].map(([key, label]) => (
+                  <button
+                    className={activeTab === key ? "active" : ""}
+                    key={key}
+                    onClick={() => {
+                      setActiveTab(key as ResultTab);
+                      setCopied(false);
+                    }}
+                    type="button"
+                  >
+                    {label}
+                  </button>
                 ))}
               </div>
 
-              <textarea readOnly value={result.markdown} />
+              {activeTab === "frames" ? (
+                <div className="frames">
+                  {result.frames.map((frame) => (
+                    <article className="frameCard" key={frame.fileName}>
+                      <img src={frame.dataUrl} alt={frame.description} />
+                      <div>
+                        <div className="frameMeta">
+                          <strong>{formatTimestamp(frame.timestamp)}</strong>
+                          <span>{frame.score.toFixed(3)}</span>
+                        </div>
+                        <p>{frame.description}</p>
+                        <div className="tags">{frame.labels.map((label) => <span key={label}>{label}</span>)}</div>
+                        <button type="button" onClick={() => downloadDataUrl(frame.dataUrl, frame.fileName)}>
+                          Download frame
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ) : null}
+
+              {activeTab === "warnings" ? (
+                <div className="warningList">
+                  {result.cinematic.slopWarnings.map((warning) => (
+                    <article key={warning.rule}>
+                      <h3>{warning.rule}</h3>
+                      <p>{warning.whyItBreaksTaste}</p>
+                      <dl>
+                        <dt>Reject if</dt>
+                        <dd>{warning.rejectIf}</dd>
+                        <dt>Prefer</dt>
+                        <dd>{warning.preferredMove}</dd>
+                      </dl>
+                    </article>
+                  ))}
+                </div>
+              ) : null}
+
+              {activeTab !== "frames" && activeTab !== "warnings" ? (
+                <textarea
+                  readOnly
+                  value={
+                    activeTab === "style"
+                      ? result.cinematic.styleMarkdown
+                      : activeTab === "shot-specs"
+                        ? result.cinematic.shotSpecMarkdown
+                        : activeTab === "prompt"
+                          ? result.cinematic.promptMarkdown
+                          : result.markdown
+                  }
+                />
+              ) : null}
             </>
           ) : null}
         </div>

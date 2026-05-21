@@ -12,6 +12,8 @@ const requestSchema = z.object({
   url: z.string().url(),
   topK: z.number().int().min(1).max(24).default(8),
   mode: z.enum(["top-k", "density"]).default("density"),
+  selectionMode: z.enum(["top-k", "density"]).optional(),
+  outputMode: z.enum(["watch", "style", "prompt", "shot-specs", "all"]).default("all"),
   candidateIntervalSeconds: z.number().min(1).max(120).default(8),
   maxCandidateFrames: z.number().int().min(4).max(80).default(36),
   frameWidth: z.number().int().min(256).max(1600).default(768)

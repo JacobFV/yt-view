@@ -5,7 +5,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod/v4";
 
 import { analyzeYoutubeVideo } from "./core/analyze";
-import type { FrameSelectionMode } from "./core/types";
+import type { FrameSelectionMode, OutputMode } from "./core/types";
 
 const server = new McpServer({
   name: "yt-view",
@@ -21,7 +21,8 @@ server.registerTool(
     inputSchema: {
       url: z.string().url().describe("YouTube video URL"),
       topK: z.number().int().min(1).max(24).default(8),
-      mode: z.enum(["top-k", "density"]).default("density"),
+      mode: z.enum(["top-k", "density"]).default("density").describe("Frame selection mode."),
+      outputMode: z.enum(["watch", "style", "prompt", "shot-specs", "all"]).default("all"),
       candidateIntervalSeconds: z.number().min(1).max(120).default(8),
       maxCandidateFrames: z.number().int().min(4).max(80).default(36),
       frameWidth: z.number().int().min(256).max(1600).default(768),
@@ -32,7 +33,8 @@ server.registerTool(
     const result = await analyzeYoutubeVideo({
       url: args.url,
       topK: args.topK,
-      mode: args.mode as FrameSelectionMode,
+      selectionMode: args.mode as FrameSelectionMode,
+      outputMode: args.outputMode as OutputMode,
       candidateIntervalSeconds: args.candidateIntervalSeconds,
       maxCandidateFrames: args.maxCandidateFrames,
       frameWidth: args.frameWidth,
@@ -46,7 +48,11 @@ server.registerTool(
       {
         type: "text",
         text:
-          `${result.markdown}\n` +
+          `${args.outputMode === "style" ? result.cinematic.styleMarkdown : ""}` +
+          `${args.outputMode === "prompt" ? result.cinematic.promptMarkdown : ""}` +
+          `${args.outputMode === "shot-specs" ? result.cinematic.shotSpecMarkdown : ""}` +
+          `${args.outputMode === "watch" ? result.markdown : ""}` +
+          `${args.outputMode === "all" ? [result.markdown, result.cinematic.styleMarkdown, result.cinematic.shotSpecMarkdown, result.cinematic.promptMarkdown].join("\n\n---\n\n") : ""}\n` +
           `\nArtifacts directory: ${result.artifacts.outputDir}\n` +
           `ZIP: ${result.artifacts.zipPath}\n`
       }
