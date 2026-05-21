@@ -614,179 +614,6 @@ export default function Home() {
 }
 
 /* ================================================================== *
- * Auth                                                                *
- * ================================================================== */
-
-const AUTH_POINTS = [
-  {
-    title: "Frames that matter",
-    body: "Vision salience and transcript density pick the representative stills — not every keyframe."
-  },
-  {
-    title: "Cinematic grammar",
-    body: "A style bible plus Blender / Remotion-ready shot specs your agents can build from."
-  },
-  {
-    title: "Your reference archive",
-    body: "Every analysis is saved to your account — reopen any past video in one click."
-  }
-];
-
-const _AuthView = function AuthView(props: { onAuthenticated: (user: User) => void }) {
-  const [mode, setMode] = useState<"login" | "signup">("login");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setBusy(true);
-    setError("");
-    try {
-      const response = await fetch(`/api/auth/${mode}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-      });
-      const payload = (await response.json()) as { user?: User; error?: string };
-      if (!response.ok || !payload.user) throw new Error(payload.error || "Authentication failed.");
-      props.onAuthenticated(payload.user);
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Authentication failed.");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  function switchMode(next: "login" | "signup") {
-    if (next === mode) return;
-    setMode(next);
-    setError("");
-  }
-
-  return (
-    <div className="auth-shell">
-      <div className="auth-copy">
-        <span className="hero-eyebrow">Reference cinema → executable grammar</span>
-        <h1 className="hero-title">
-          Turn any YouTube video into a <em>VLM-ready context pack</em>.
-        </h1>
-        <p className="hero-sub">
-          Timed transcript, the frames that actually matter, and the cinematic grammar underneath —
-          compiled into copy-paste artifacts your coding agents can build from.
-        </p>
-        <ul className="auth-points">
-          {AUTH_POINTS.map((point) => (
-            <li key={point.title}>
-              <strong>{point.title}</strong>
-              <span>{point.body}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <form className="auth-form" onSubmit={submit}>
-        <p className="auth-form-kicker">
-          {mode === "login" ? "Welcome back" : "Start your archive"}
-        </p>
-
-        <div className="auth-tabs" role="tablist" aria-label="Authentication mode">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={mode === "login"}
-            className={mode === "login" ? "is-active" : ""}
-            onClick={() => switchMode("login")}
-          >
-            Sign in
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={mode === "signup"}
-            className={mode === "signup" ? "is-active" : ""}
-            onClick={() => switchMode("signup")}
-          >
-            Create account
-          </button>
-        </div>
-
-        <label className="auth-field">
-          <span>Email</span>
-          <input
-            type="email"
-            autoComplete="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="you@studio.com"
-            required
-            autoFocus
-          />
-        </label>
-
-        <label className="auth-field">
-          <span>Password</span>
-          <div className="auth-input-wrap">
-            <input
-              type={showPassword ? "text" : "password"}
-              autoComplete={mode === "login" ? "current-password" : "new-password"}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              minLength={8}
-              required
-            />
-            <button
-              type="button"
-              className="auth-reveal"
-              onClick={() => setShowPassword((value) => !value)}
-              aria-label={showPassword ? "Hide password" : "Show password"}
-            >
-              {showPassword ? "Hide" : "Show"}
-            </button>
-          </div>
-          {mode === "signup" ? (
-            <span className="auth-hint">At least 8 characters</span>
-          ) : null}
-        </label>
-
-        {error ? (
-          <p className="error-banner" role="alert">
-            {error}
-          </p>
-        ) : null}
-
-        <button type="submit" className="cta" disabled={busy}>
-          <span>{busy ? "Working..." : mode === "login" ? "Sign in" : "Create account"}</span>
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M5 12h14M13 5l7 7-7 7" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-          </svg>
-        </button>
-
-        <p className="auth-switch">
-          {mode === "login" ? (
-            <>
-              New to yt2ctx?{" "}
-              <button type="button" onClick={() => switchMode("signup")}>
-                Create an account
-              </button>
-            </>
-          ) : (
-            <>
-              Already have an account?{" "}
-              <button type="button" onClick={() => switchMode("login")}>
-                Sign in
-              </button>
-            </>
-          )}
-        </p>
-      </form>
-    </div>
-  );
-};
-
-/* ================================================================== *
  * Compose                                                             *
  * ================================================================== */
 
@@ -843,11 +670,11 @@ function ComposeView(props: {
       <div className="compose-hero">
         <span className="hero-eyebrow">Reference cinema → executable grammar</span>
         <h1 className="hero-title">
-          Turn any YouTube video into a <em>VLM-ready context pack</em>.
+          Turn any YouTube video into a <em>ready-to-use context pack</em>.
         </h1>
         <p className="hero-sub">
-          Timed transcript, the frames that actually matter, and the cinematic grammar underneath —
-          compiled into copy-paste artifacts your agents can build from.
+          A timed transcript, the handful of frames that actually matter, and a clear read on how
+          the video looks and moves — all in copy-paste form your AI tools can build from.
         </p>
       </div>
 
@@ -1047,9 +874,9 @@ function ComposeView(props: {
       ) : null}
 
       <div className="feature-row">
-        <Feature title="Frames that matter" body="Vision salience, novelty, and transcript density pick the representative stills." />
-        <Feature title="Cinematic grammar" body="A style bible plus Blender / Remotion-ready shot specs, not slide-deck slop." />
-        <Feature title="Built for agents" body="Streaming NDJSON API, an MCP tool, and a CLI — same pipeline everywhere." />
+        <Feature title="Frames that matter" body="We watch the whole video and keep only the shots that capture what's happening — not every frame." />
+        <Feature title="Cinematic grammar" body="A style guide and shot-by-shot specs, ready to drop into Blender or Remotion." />
+        <Feature title="Built for agents" body="Use it in your browser, on the command line, or wired into an AI assistant — same results everywhere." />
       </div>
     </div>
   );
@@ -1197,9 +1024,9 @@ function BillingPanel(props: {
     return (
       <section className="billing-panel">
         <div className="billing-copy">
-          <span className="billing-kicker">Guest quota</span>
-          <strong>{props.billing?.free.anonymousTextRemaining ?? 0} text-only extractions left</strong>
-          <p>Sign in for 100 free text-only extractions, 10 free full context extractions, credits, and saved videos.</p>
+          <span className="billing-kicker">Free trial</span>
+          <strong>{props.billing?.free.anonymousTextRemaining ?? 0} free text-only runs left</strong>
+          <p>Sign in for 100 free text-only runs and 10 full runs — plus pay-as-you-go credits and a saved video library.</p>
         </div>
         <AuthMini onAuthenticated={props.onAuthenticated} />
       </section>
@@ -1212,9 +1039,10 @@ function BillingPanel(props: {
         <span className="billing-kicker">Credits</span>
         <strong>{money(account?.creditBalanceCents ?? 0)} balance</strong>
         <p>
-          Free left: {props.billing?.free.authenticatedTextRemaining ?? 0} text-only ·{" "}
-          {props.billing?.free.authenticatedFullRemaining ?? 0} full. Paid runs cost{" "}
-          {money(props.billing?.prices.text ?? 0)} text-only or {money(props.billing?.prices.full ?? 0)} full.
+          {props.billing?.free.authenticatedTextRemaining ?? 0} free text-only and{" "}
+          {props.billing?.free.authenticatedFullRemaining ?? 0} free full runs left. After that,
+          each run is {money(props.billing?.prices.text ?? 0)} text-only or{" "}
+          {money(props.billing?.prices.full ?? 0)} full.
         </p>
       </div>
       <div className="billing-actions">
@@ -1241,7 +1069,7 @@ function BillingPanel(props: {
             checked={Boolean(account?.autoRefillEnabled)}
             onChange={(event) => props.onBillingSettings({ autoRefillEnabled: event.target.checked })}
           />
-          <span>Auto-refill below {money(account?.autoRefillThresholdCents ?? 200)}</span>
+          <span>Top up automatically when my balance drops below {money(account?.autoRefillThresholdCents ?? 200)}</span>
         </label>
         <label>
           <input
@@ -1249,7 +1077,7 @@ function BillingPanel(props: {
             checked={Boolean(account?.recurringEnabled)}
             onChange={(event) => props.onBillingSettings({ recurringEnabled: event.target.checked })}
           />
-          <span>Recurring payments enabled</span>
+          <span>Refill my credits on a monthly schedule</span>
         </label>
       </div>
     </section>

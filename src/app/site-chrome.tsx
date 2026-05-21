@@ -4,7 +4,7 @@ const productLinks = [
   { href: "/web", label: "Web" },
   { href: "/cli", label: "CLI" },
   { href: "/mcp", label: "MCP" },
-  { href: "/api-reference", label: "API · NDJSON" }
+  { href: "/api-reference", label: "API" }
 ];
 
 export function Brand() {
