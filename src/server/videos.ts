@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { del } from "@vercel/blob";
 
 import type { AnalyzeResult } from "../app/result-types";
 import { ensureSchema, sql } from "./db";
@@ -98,6 +99,13 @@ export async function getVideo(user: User, id: string): Promise<SavedVideo | nul
 
 export async function deleteVideo(user: User, id: string): Promise<void> {
   await ensureSchema();
+  const video = await getVideo(user, id);
+  if (!video) return;
+  const blobUrls = [
+    video.result.zipUrl,
+    ...video.result.frames.map((frame) => frame.imageUrl)
+  ].filter((url): url is string => Boolean(url));
+  if (blobUrls.length) await del(blobUrls);
   await sql`
     DELETE FROM videos
     WHERE user_id = ${user.id}

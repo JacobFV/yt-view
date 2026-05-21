@@ -1,14 +1,13 @@
-import { readFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { z } from "zod/v4";
 
-import type { AnalyzeResult, Frame } from "../../result-types";
+import type { AnalyzeResult } from "../../result-types";
 import { analyzeYoutubeVideo } from "../../../core/analyze";
-import { attachFrameDataUrls } from "../../../core/render";
 import type { ProgressEvent } from "../../../core/types";
 import { requireUser, type User } from "../../../server/auth";
+import { uploadAnalysisArtifacts } from "../../../server/blob-artifacts";
 import { saveVideo } from "../../../server/videos";
 
 export const runtime = "nodejs";
@@ -45,9 +44,10 @@ const API_INFO = {
     id: "string — job identifier",
     metadata: "{ title, uploader, durationSeconds }",
     markdown: "string — the watch pack",
-    frames: "Array<{ fileName, timestamp, score, description, labels, dataUrl }>",
+    frames: "Array<{ fileName, timestamp, score, description, labels, imageUrl, imageDownloadUrl }>",
     cinematic: "{ styleMarkdown, shotSpecMarkdown, promptMarkdown, shotSpecs, slopWarnings }",
-    zipDataUrl: "string — base64 data URL of the full artifact ZIP"
+    zipUrl: "string — Blob URL of the full artifact ZIP",
+    zipDownloadUrl: "string — Blob download URL of the full artifact ZIP"
   },
   examples: {
     buffered:
@@ -112,9 +112,9 @@ function messageOf(error: unknown): string {
 }
 
 /**
- * Runs the full pipeline and assembles a browser-ready payload: every selected
- * frame carries an inline data URL and the artifact ZIP is base64-encoded so
- * the client needs no follow-up requests.
+ * Runs the full pipeline and uploads browser assets to Vercel Blob. Blob
+ * storage is required for the web path so large frame/ZIP payloads are not
+ * stored inline in JSON or Postgres.
  */
 async function runAnalysis(
   body: AnalyzeRequest,
@@ -126,13 +126,7 @@ async function runAnalysis(
     outputDir: path.join(os.tmpdir(), "yt2ctx-web"),
     onProgress
   });
-  const frames = (await attachFrameDataUrls(result.frames)) as Frame[];
-  const zipBuffer = await readFile(result.artifacts.zipPath);
-  return {
-    ...result,
-    frames,
-    zipDataUrl: `data:application/zip;base64,${zipBuffer.toString("base64")}`
-  };
+  return uploadAnalysisArtifacts(result);
 }
 
 /** GET /api/analyze — return the endpoint contract so the API is discoverable. */

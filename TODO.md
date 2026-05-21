@@ -3,8 +3,9 @@
 ## Make the hosted web app safe to expose publicly
 
 > **Current state.** `POST /api/analyze` is gated behind first-party
-> email/password authentication and saves completed analyses to Neon Postgres.
-> Every authenticated call still spends real money: OpenAI transcription, one
+> email/password authentication, saves completed analysis metadata to Neon
+> Postgres, and stores generated frames/ZIPs in Vercel Blob. Every authenticated
+> call still spends real money: OpenAI transcription, one
 > vision call per candidate frame (up to 36), embeddings, and a large
 > grammar-compilation call — roughly **$0.05–0.30 per analysis** — plus Vercel
 > function compute (300 s Node functions on Active-CPU pricing). A public
@@ -53,6 +54,7 @@ Cheap protections that work even before auth exists.
       (or Upstash Redis if only counters are needed).
 - [x] Schema: `users`, `sessions`, `videos`.
 - [x] Save every completed analysis payload to the signed-in user's video library.
+- [x] Store generated frame JPGs and artifact ZIPs in Vercel Blob instead of inline base64 JSON.
 - [ ] Add usage tables for period counts and estimated spend.
 - [ ] Record every analysis cost estimate.
 - [ ] Enforce a **free-tier quota** server-side *before* starting the pipeline

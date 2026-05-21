@@ -87,6 +87,7 @@ URL ─▶ download ─▶ audio ─▶ transcribe ─▶ sample frames ─▶ v
 - **Node.js 20+**
 - An **`OPENAI_API_KEY`**
 - A Postgres **`DATABASE_URL`** for the authenticated web app
+- A Vercel Blob **`BLOB_READ_WRITE_TOKEN`** for generated frames and ZIPs
 - Network access to YouTube and OpenAI
 
 `ffmpeg` and `ffprobe` are bundled — no system install required.
@@ -99,7 +100,7 @@ cd yt2ctx
 npm install
 
 cp .env.example .env
-# open .env and set OPENAI_API_KEY and DATABASE_URL
+# open .env and set OPENAI_API_KEY, DATABASE_URL, and BLOB_READ_WRITE_TOKEN
 
 npm run dev        # web app at http://localhost:3000
 ```
@@ -156,7 +157,8 @@ one printer's red, and the two moments you *watch* (the processing frame and the
 lightbox) drop to theater black.
 
 - a **URL composer** that detects the video and shows its thumbnail before you run
-- **account auth** with HttpOnly sessions and a Postgres-backed video library
+- **account auth** with HttpOnly sessions, a Postgres-backed video library, and
+  Blob-backed frame/ZIP storage
 - a collapsible **Tuning** panel for frame count, selection mode, and sampling
 - **live pipeline progress** — every stage reports in real time with an overall
   percentage, an elapsed clock, and per-frame counts, instead of a blind spinner
@@ -317,8 +319,8 @@ serves the browser and headless agents:
 **Request body** (JSON): `url` *(required)*, `topK`, `mode` (`density` |
 `top-k`), `candidateIntervalSeconds`, `maxCandidateFrames`, `frameWidth`.
 
-**Result**: `metadata`, `markdown`, `frames` (each with an inline `dataUrl`),
-`cinematic` artifacts, and a base64 `zipDataUrl`.
+**Result**: `metadata`, `markdown`, `frames` (each with `imageUrl` and
+`imageDownloadUrl`), `cinematic` artifacts, `zipUrl`, and `zipDownloadUrl`.
 
 ```bash
 # Discover the contract
@@ -394,6 +396,7 @@ Environment variables (see `.env.example`):
 |----------|---------|-------------|
 | `OPENAI_API_KEY` | *(required)* | Your OpenAI API key. |
 | `DATABASE_URL` | *(required for web)* | Postgres connection string for accounts, sessions, and saved video analyses. |
+| `BLOB_READ_WRITE_TOKEN` | *(required for web)* | Vercel Blob token for generated frame JPGs and artifact ZIPs. |
 | `OPENAI_TRANSCRIBE_MODEL` | `whisper-1` | Transcription model. |
 | `OPENAI_VISION_MODEL` | `gpt-4.1-mini` | Vision + grammar model. |
 | `OPENAI_EMBEDDING_MODEL` | `text-embedding-3-small` | Embedding model. |
@@ -408,12 +411,13 @@ This repo is intended to deploy through a linked GitHub repository on Vercel.
 Push to the configured production branch and let Vercel build automatically.
 
 Set `OPENAI_API_KEY` in the Vercel project settings before relying on automatic
-deployments. The web app also requires `DATABASE_URL`; the project is designed
-to use a Vercel Marketplace Postgres provider such as Neon, which injects the
-connection environment variables when connected to the project. The analyze
-route is configured for the Node.js runtime with a 300 second function duration.
-Serverless limits still apply — long videos are better processed through the CLI
-or MCP server; short videos and clips fit the hosted web path.
+deployments. The web app also requires `DATABASE_URL` and
+`BLOB_READ_WRITE_TOKEN`; the project is designed to use Vercel Marketplace
+Postgres plus Vercel Blob, which inject connection environment variables when
+connected to the project. The analyze route is configured for the Node.js
+runtime with a 300 second function duration. Serverless limits still apply —
+long videos are better processed through the CLI or MCP server; short videos and
+clips fit the hosted web path.
 
 > [!IMPORTANT]
 > The hosted web app requires authentication, but each analysis still costs real

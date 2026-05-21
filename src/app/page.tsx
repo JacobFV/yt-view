@@ -1216,7 +1216,7 @@ function ResultView(props: {
             type="button"
             className="btn btn-primary"
             onClick={() => {
-              downloadBlob(result.zipDataUrl, `${result.id}.zip`);
+              downloadBlob(result.zipDownloadUrl, `${result.id}.zip`);
               props.flashToast("Artifact ZIP downloading");
             }}
           >
@@ -1315,7 +1315,7 @@ function FramesGrid(props: {
             onClick={() => props.onOpen(index)}
             aria-label={`Open frame at ${formatTimestamp(frame.timestamp)}`}
           >
-            <img className="frame-img" src={frame.dataUrl} alt={frame.description} loading="lazy" />
+            <img className="frame-img" src={frame.imageUrl} alt={frame.description} loading="lazy" />
             <span className="frame-time">{formatTimestamp(frame.timestamp)}</span>
             <span className="frame-expand" aria-hidden="true">⤢</span>
           </button>
@@ -1342,7 +1342,7 @@ function FramesGrid(props: {
               type="button"
               className="btn btn-ghost btn-sm frame-dl"
               onClick={() => {
-                downloadBlob(frame.dataUrl, frame.fileName);
+                downloadBlob(frame.imageDownloadUrl, frame.fileName);
                 props.flashToast("Frame downloading");
               }}
             >
@@ -1418,7 +1418,7 @@ function Lightbox(props: {
         ‹
       </button>
       <div className="lightbox-inner" onClick={(event) => event.stopPropagation()}>
-        <img className="lightbox-img" src={frame.dataUrl} alt={frame.description} />
+        <img className="lightbox-img" src={frame.imageUrl} alt={frame.description} />
         <div className="lightbox-side">
           <div className="lightbox-head">
             <span className="lightbox-time">{formatTimestamp(frame.timestamp)}</span>
@@ -1454,7 +1454,7 @@ function Lightbox(props: {
             type="button"
             className="btn btn-primary btn-sm"
             onClick={() => {
-              downloadBlob(frame.dataUrl, frame.fileName);
+              downloadBlob(frame.imageDownloadUrl, frame.fileName);
               props.flashToast("Frame downloading");
             }}
           >

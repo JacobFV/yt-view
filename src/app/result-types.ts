@@ -11,7 +11,8 @@ export type Frame = {
   description: string;
   labels: string[];
   transcriptContext?: string;
-  dataUrl: string;
+  imageUrl: string;
+  imageDownloadUrl: string;
 };
 
 export type SlopWarning = {
@@ -23,11 +24,13 @@ export type SlopWarning = {
 
 export type AnalyzeResult = {
   id: string;
+  createdAt: string;
   savedVideoId?: string;
   sourceUrl: string;
   metadata: { title?: string; uploader?: string; durationSeconds: number };
   options: { visionModel: string; mode: string; topK: number };
   markdown: string;
+  transcriptSegments?: unknown[];
   frames: Frame[];
   cinematic: {
     styleMarkdown: string;
@@ -36,7 +39,8 @@ export type AnalyzeResult = {
     slopWarnings: SlopWarning[];
     shotSpecs?: unknown[];
   };
-  zipDataUrl: string;
+  zipUrl: string;
+  zipDownloadUrl: string;
 };
 
 export type User = {
