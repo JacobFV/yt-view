@@ -46,6 +46,8 @@ program
   .option("--candidate-interval <seconds>", "seconds between candidate frames", (value) => Number.parseFloat(value), 8)
   .option("--max-candidates <number>", "maximum candidate frames to send through vision analysis", (value) => Number.parseInt(value, 10), 36)
   .option("--frame-width <pixels>", "extracted frame width", (value) => Number.parseInt(value, 10), 768)
+  .option("--cookies <path>", "path to a Netscape cookies.txt file for yt-dlp")
+  .option("--cookies-from-browser <browser>", "browser cookie source for yt-dlp, for example: chrome, firefox")
   .option("--json", "print JSON metadata instead of markdown")
   .option("--with-data-urls", "include base64 data URLs in JSON output")
   .option("--quiet", "suppress the live progress display")
@@ -75,6 +77,10 @@ program
       candidateIntervalSeconds: Number(opts.candidateInterval),
       maxCandidateFrames: Number(opts.maxCandidates),
       frameWidth: Number(opts.frameWidth),
+      ytDlpAuth: {
+        cookies: opts.cookies ? String(opts.cookies) : undefined,
+        cookiesFromBrowser: opts.cookiesFromBrowser ? String(opts.cookiesFromBrowser) : undefined
+      },
       onProgress: createCliReporter(!opts.quiet)
     });
 

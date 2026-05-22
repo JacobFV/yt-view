@@ -5,5 +5,6 @@ export type {
   FrameSelectionMode,
   TranscriptSegment,
   VideoAnalysisResult,
-  VideoMetadata
+  VideoMetadata,
+  YtDlpAuthOptions
 } from "./core/types";

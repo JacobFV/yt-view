@@ -55,6 +55,7 @@ export type User = {
   id: string;
   email: string;
   stripeCustomerId?: string | null;
+  unlimitedCredits?: boolean;
 };
 
 export type BillingSummary = {

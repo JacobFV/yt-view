@@ -186,6 +186,7 @@ npm run cli -- "<url>" \
   --candidate-interval 6 \
   --max-candidates 48 \
   --frame-width 768 \
+  --cookies-from-browser chrome \
   --quiet
 ```
 
@@ -197,6 +198,8 @@ npm run cli -- "<url>" \
 | `--candidate-interval <s>` | `8` | Seconds between sampled frames. |
 | `--max-candidates <n>` | `36` | Candidate frames sent to vision analysis. |
 | `--frame-width <px>` | `768` | Extracted frame width. |
+| `--cookies <path>` | — | Netscape cookies.txt file to pass to `yt-dlp`. |
+| `--cookies-from-browser <browser>` | — | Browser cookie source to pass to `yt-dlp`, such as `chrome` or `firefox`. |
 | `-o, --output <dir>` | `.yt2ctx` | Output directory. |
 | `--json` | — | Print JSON metadata instead of Markdown. |
 | `--with-data-urls` | — | Include base64 data URLs in JSON output. |
@@ -205,6 +208,16 @@ npm run cli -- "<url>" \
 The CLI renders a live progress bar on **stderr** as it moves through each
 pipeline stage. **stdout** only ever receives the requested artifact text or
 JSON, so it stays safe to pipe.
+
+If YouTube returns "Sign in to confirm you're not a bot", use a signed-in
+browser session:
+
+```bash
+npm run cli -- "<url>" --cookies-from-browser chrome
+```
+
+For server, API, or MCP runs, set `YT2CTX_YTDLP_COOKIES` to a cookies.txt path
+or `YT2CTX_YTDLP_COOKIES_FROM_BROWSER` to a browser name in the environment.
 
 ## MCP server
 
@@ -401,6 +414,8 @@ Environment variables (see `.env.example`):
 | `OPENAI_VISION_MODEL` | `gpt-4.1-mini` | Vision + grammar model. |
 | `OPENAI_EMBEDDING_MODEL` | `text-embedding-3-small` | Embedding model. |
 | `YT2CTX_OUTPUT_DIR` | `.yt2ctx` | Default artifact directory. |
+| `YT2CTX_YTDLP_COOKIES` | — | Optional Netscape cookies.txt path for `yt-dlp`. |
+| `YT2CTX_YTDLP_COOKIES_FROM_BROWSER` | — | Optional browser cookie source for `yt-dlp`, such as `chrome` or `firefox`. |
 
 `whisper-1` is the default because it supports verbose JSON with segment
 timestamps.

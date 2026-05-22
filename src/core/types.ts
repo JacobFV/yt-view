@@ -2,6 +2,11 @@ export type FrameSelectionMode = "top-k" | "density";
 export type OutputMode = "watch" | "style" | "prompt" | "shot-specs" | "all";
 export type ExtractionKind = "text" | "full";
 
+export type YtDlpAuthOptions = {
+  cookies?: string;
+  cookiesFromBrowser?: string;
+};
+
 export type AnalyzeVideoOptions = {
   url: string;
   outputDir?: string;
@@ -18,6 +23,7 @@ export type AnalyzeVideoOptions = {
   transcribeModel?: string;
   visionModel?: string;
   embeddingModel?: string;
+  ytDlpAuth?: YtDlpAuthOptions;
   onProgress?: (event: ProgressEvent) => void;
 };
 

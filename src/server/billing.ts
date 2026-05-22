@@ -117,7 +117,10 @@ export async function authorizeExtraction(params: {
   }
 
   const platform = await getPlatformBalance();
-  if (platform.netLossCents + params.estimatedCostCents > PLATFORM_MAX_NET_LOSS_CENTS) {
+  if (
+    !params.user?.unlimitedCredits &&
+    platform.netLossCents + params.estimatedCostCents > PLATFORM_MAX_NET_LOSS_CENTS
+  ) {
     throw new Error("The service is at its shared cost ceiling. Add credits before running more extractions.");
   }
 
@@ -128,7 +131,9 @@ export async function authorizeExtraction(params: {
   let creditBalanceCents = 0;
   let remainingFree = 0;
 
-  if (params.user) {
+  if (params.user?.unlimitedCredits) {
+    creditBalanceCents = (await getOrCreateBillingAccount(params.user)).creditBalanceCents;
+  } else if (params.user) {
     const freeLimit =
       params.extractionKind === "text"
         ? FREE_TEXT_EXTRACTIONS_AUTHENTICATED

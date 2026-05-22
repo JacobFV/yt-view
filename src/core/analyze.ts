@@ -51,7 +51,7 @@ export async function analyzeYoutubeVideo(options: AnalyzeVideoOptions): Promise
   const client = createOpenAiClient(apiKey);
 
   tracker.report("info");
-  const info = await getVideoInfo(resolved.url);
+  const info = await getVideoInfo(resolved.url, resolved.ytDlpAuth);
   const jobId = `${new Date().toISOString().replace(/[:.]/g, "-")}-${crypto
     .randomBytes(4)
     .toString("hex")}-${slugify(info.title || info.id || "video")}`;
@@ -66,7 +66,7 @@ export async function analyzeYoutubeVideo(options: AnalyzeVideoOptions): Promise
     const frameDir = path.join(outputRoot, "frames");
 
     tracker.report("download", { detail: info.title || undefined });
-    await downloadVideo(resolved.url, videoPath);
+    await downloadVideo(resolved.url, videoPath, resolved.ytDlpAuth);
     const duration = info.durationSeconds || (await getDurationSeconds(videoPath));
     const metadata = { ...info, durationSeconds: duration };
 
@@ -194,7 +194,7 @@ export async function analyzeYoutubeTranscript(options: AnalyzeVideoOptions): Pr
   const client = createOpenAiClient(apiKey);
 
   tracker.report("info");
-  const info = await getVideoInfo(resolved.url);
+  const info = await getVideoInfo(resolved.url, resolved.ytDlpAuth);
   const jobId = `${new Date().toISOString().replace(/[:.]/g, "-")}-${crypto
     .randomBytes(4)
     .toString("hex")}-${slugify(info.title || info.id || "video")}`;
@@ -208,7 +208,7 @@ export async function analyzeYoutubeTranscript(options: AnalyzeVideoOptions): Pr
     const frameDir = path.join(outputRoot, "frames");
 
     tracker.report("download", { detail: info.title || undefined });
-    await downloadVideo(resolved.url, videoPath);
+    await downloadVideo(resolved.url, videoPath, resolved.ytDlpAuth);
     const duration = info.durationSeconds || (await getDurationSeconds(videoPath));
     const metadata = { ...info, durationSeconds: duration };
 

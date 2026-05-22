@@ -2,7 +2,7 @@ import { mkdir } from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
 
-import type { VideoMetadata } from "./types";
+import type { VideoMetadata, YtDlpAuthOptions } from "./types";
 
 const require = createRequire(import.meta.url);
 const ffmpegStatic = require("ffmpeg-static") as string | null;
@@ -17,12 +17,21 @@ type YoutubeDlInfo = {
   thumbnail?: string;
 };
 
-export async function getVideoInfo(url: string): Promise<VideoMetadata> {
+function authFlags(auth?: YtDlpAuthOptions): Record<string, string> {
+  const cookies = auth?.cookies || process.env.YT2CTX_YTDLP_COOKIES;
+  const cookiesFromBrowser = auth?.cookiesFromBrowser || process.env.YT2CTX_YTDLP_COOKIES_FROM_BROWSER;
+  return {
+    ...(cookies ? { cookies } : {}),
+    ...(cookiesFromBrowser ? { cookiesFromBrowser } : {})
+  };
+}
+
+export async function getVideoInfo(url: string, auth?: YtDlpAuthOptions): Promise<VideoMetadata> {
   const info = (await youtubedl(url, {
     dumpSingleJson: true,
     noWarnings: true,
     noCheckCertificates: true,
-    callHome: false
+    ...authFlags(auth)
   })) as YoutubeDlInfo;
 
   return {
@@ -35,7 +44,11 @@ export async function getVideoInfo(url: string): Promise<VideoMetadata> {
   };
 }
 
-export async function downloadVideo(url: string, outputPath: string): Promise<void> {
+export async function downloadVideo(
+  url: string,
+  outputPath: string,
+  auth?: YtDlpAuthOptions
+): Promise<void> {
   await mkdir(path.dirname(outputPath), { recursive: true });
   const ffmpegLocation = ffmpegStatic || undefined;
 
@@ -46,6 +59,6 @@ export async function downloadVideo(url: string, outputPath: string): Promise<vo
     ffmpegLocation,
     noWarnings: true,
     noCheckCertificates: true,
-    callHome: false
+    ...authFlags(auth)
   });
 }

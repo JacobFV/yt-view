@@ -26,6 +26,8 @@ server.registerTool(
       candidateIntervalSeconds: z.number().min(1).max(120).default(8),
       maxCandidateFrames: z.number().int().min(4).max(80).default(36),
       frameWidth: z.number().int().min(256).max(1600).default(768),
+      cookies: z.string().optional().describe("Path to a Netscape cookies.txt file for yt-dlp."),
+      cookiesFromBrowser: z.string().optional().describe("Browser cookie source for yt-dlp, for example: chrome, firefox."),
       outputDir: z.string().optional()
     }
   },
@@ -38,6 +40,10 @@ server.registerTool(
       candidateIntervalSeconds: args.candidateIntervalSeconds,
       maxCandidateFrames: args.maxCandidateFrames,
       frameWidth: args.frameWidth,
+      ytDlpAuth: {
+        cookies: args.cookies,
+        cookiesFromBrowser: args.cookiesFromBrowser
+      },
       outputDir: args.outputDir
     });
 

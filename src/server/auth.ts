@@ -12,6 +12,7 @@ export type User = {
   id: string;
   email: string;
   stripeCustomerId?: string | null;
+  unlimitedCredits?: boolean;
 };
 
 function normalizeEmail(email: string): string {
@@ -114,7 +115,11 @@ export async function createUserSession(email: string, password: string): Promis
     ON CONFLICT (user_id) DO NOTHING
   `;
 
-  return { user: { id: userId, email: normalized, stripeCustomerId: null }, sessionId, expiresAt };
+  return {
+    user: { id: userId, email: normalized, stripeCustomerId: null, unlimitedCredits: false },
+    sessionId,
+    expiresAt
+  };
 }
 
 export async function loginUser(email: string, password: string): Promise<{
@@ -125,13 +130,19 @@ export async function loginUser(email: string, password: string): Promise<{
   await ensureSchema();
   const normalized = normalizeEmail(email);
   const rows = await sql`
-    SELECT id, email, password_hash, stripe_customer_id
+    SELECT id, email, password_hash, stripe_customer_id, unlimited_credits
     FROM users
     WHERE email = ${normalized}
     LIMIT 1
   `;
   const user = rows[0] as
-    | { id: string; email: string; password_hash: string; stripe_customer_id: string | null }
+    | {
+        id: string;
+        email: string;
+        password_hash: string;
+        stripe_customer_id: string | null;
+        unlimited_credits: boolean;
+      }
     | undefined;
   if (!user || !(await verifyPassword(password, user.password_hash))) {
     throw new Error("Invalid email or password.");
@@ -145,7 +156,12 @@ export async function loginUser(email: string, password: string): Promise<{
   `;
 
   return {
-    user: { id: user.id, email: user.email, stripeCustomerId: user.stripe_customer_id },
+    user: {
+      id: user.id,
+      email: user.email,
+      stripeCustomerId: user.stripe_customer_id,
+      unlimitedCredits: user.unlimited_credits
+    },
     sessionId,
     expiresAt
   };
@@ -157,7 +173,8 @@ export async function userFromRequest(request: Request): Promise<User | null> {
   await ensureSchema();
 
   const rows = await sql`
-    SELECT users.id, users.email, users.stripe_customer_id AS "stripeCustomerId"
+    SELECT users.id, users.email, users.stripe_customer_id AS "stripeCustomerId",
+      users.unlimited_credits AS "unlimitedCredits"
     FROM sessions
     JOIN users ON users.id = sessions.user_id
     WHERE sessions.id = ${sessionId}

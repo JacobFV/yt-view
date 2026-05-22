@@ -22,10 +22,12 @@ export async function ensureSchema(): Promise<void> {
         email TEXT NOT NULL UNIQUE,
         password_hash TEXT NOT NULL,
         stripe_customer_id TEXT,
+        unlimited_credits BOOLEAN NOT NULL DEFAULT FALSE,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       )
     `;
     await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT`;
+    await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS unlimited_credits BOOLEAN NOT NULL DEFAULT FALSE`;
     await sql`CREATE INDEX IF NOT EXISTS users_stripe_customer_idx ON users(stripe_customer_id)`;
     await sql`
       CREATE TABLE IF NOT EXISTS sessions (
