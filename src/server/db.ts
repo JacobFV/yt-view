@@ -30,6 +30,16 @@ export async function ensureSchema(): Promise<void> {
     await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS unlimited_credits BOOLEAN NOT NULL DEFAULT FALSE`;
     await sql`CREATE INDEX IF NOT EXISTS users_stripe_customer_idx ON users(stripe_customer_id)`;
     await sql`
+      CREATE TABLE IF NOT EXISTS youtube_cookie_exports (
+        user_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+        encrypted_cookies TEXT NOT NULL,
+        iv TEXT NOT NULL,
+        auth_tag TEXT NOT NULL,
+        cookie_count INTEGER NOT NULL DEFAULT 0,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      )
+    `;
+    await sql`
       CREATE TABLE IF NOT EXISTS sessions (
         id UUID PRIMARY KEY,
         user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,

@@ -810,6 +810,80 @@ a {
   font-size: 13px;
 }
 
+.youtube-cookies-panel {
+  margin-top: 18px;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  padding: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(300px, 1.1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.youtube-cookies-copy {
+  display: grid;
+  gap: 7px;
+}
+
+.youtube-cookies-copy strong {
+  color: var(--ink);
+  font-size: 18px;
+}
+
+.youtube-cookies-copy p {
+  margin: 0;
+  color: var(--ink-2);
+  line-height: 1.5;
+}
+
+.youtube-cookies-meta {
+  color: var(--ink-3);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.youtube-cookies-steps {
+  display: grid;
+  gap: 10px;
+}
+
+.youtube-cookies-steps ol {
+  margin: 0;
+  padding-left: 20px;
+  color: var(--ink-2);
+  line-height: 1.45;
+  font-size: 13px;
+}
+
+.youtube-cookies-steps input,
+.youtube-cookies-steps textarea {
+  width: 100%;
+  border: 1px solid var(--rule);
+  background: white;
+  color: var(--ink);
+}
+
+.youtube-cookies-steps input {
+  padding: 9px 10px;
+}
+
+.youtube-cookies-steps textarea {
+  min-height: 128px;
+  resize: vertical;
+  padding: 10px 11px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.youtube-cookies-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .auth-mini {
   display: grid;
   gap: 8px;
@@ -2337,6 +2411,10 @@ a {
   }
 
   .feature-row {
+    grid-template-columns: 1fr;
+  }
+
+  .youtube-cookies-panel {
     grid-template-columns: 1fr;
   }
 

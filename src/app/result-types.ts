@@ -79,6 +79,12 @@ export type BillingSummary = {
   };
 };
 
+export type YouTubeCookieStatus = {
+  configured: boolean;
+  cookieCount: number;
+  updatedAt: string | null;
+};
+
 export type SavedVideoSummary = {
   id: string;
   analysisId: string;

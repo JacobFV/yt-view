@@ -412,6 +412,7 @@ Environment variables (see `.env.example`):
 | `OPENAI_API_KEY` | *(required)* | Your OpenAI API key. |
 | `DATABASE_URL` | *(required for web)* | Postgres connection string for accounts, sessions, and saved video analyses. |
 | `BLOB_READ_WRITE_TOKEN` | *(required for web)* | Vercel Blob token for generated frame JPGs and artifact ZIPs. |
+| `YT2CTX_COOKIE_ENCRYPTION_KEY` | `DATABASE_URL` hash | Secret used to encrypt per-user YouTube cookie exports. Set a stable random value in production. |
 | `OPENAI_TRANSCRIBE_MODEL` | `whisper-1` | Transcription model. |
 | `OPENAI_VISION_MODEL` | `gpt-4.1-mini` | Vision + grammar model. |
 | `OPENAI_EMBEDDING_MODEL` | `text-embedding-3-small` | Embedding model. |

@@ -11,7 +11,8 @@ import type {
   Frame,
   SavedVideoSummary,
   SlopWarning,
-  User
+  User,
+  YouTubeCookieStatus
 } from "./result-types";
 import { SiteFooter, SiteHeader } from "./site-chrome";
 
@@ -176,6 +177,7 @@ export default function Home() {
   // Auth state
   const [user, setUser] = useState<User | null>(null);
   const [billing, setBilling] = useState<BillingSummary | null>(null);
+  const [youtubeCookies, setYoutubeCookies] = useState<YouTubeCookieStatus | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
   // Form state
@@ -222,7 +224,9 @@ export default function Home() {
         setUser(payload.user);
         setBilling(payload.billing);
         setExtractionKind(payload.user ? "full" : "text");
-        if (payload.user) await refreshVideos();
+        if (payload.user) {
+          await Promise.all([refreshVideos(), refreshYouTubeCookies()]);
+        }
       } finally {
         if (alive) setAuthLoading(false);
       }
@@ -290,6 +294,7 @@ export default function Home() {
     setResult(null);
     setError("");
     void refreshVideos();
+    void refreshYouTubeCookies();
   }
 
   async function logout() {
@@ -297,6 +302,7 @@ export default function Home() {
     abortRef.current?.abort();
     setUser(null);
     setBilling(null);
+    setYoutubeCookies(null);
     setExtractionKind("text");
     setSaved([]);
     setResult(null);
@@ -439,6 +445,44 @@ export default function Home() {
     setBilling(payload.billing);
   }
 
+  async function refreshYouTubeCookies() {
+    const response = await fetch("/api/youtube-cookies", { cache: "no-store" });
+    if (response.status === 401) {
+      setYoutubeCookies(null);
+      return;
+    }
+    const payload = (await response.json()) as { youtubeCookies?: YouTubeCookieStatus };
+    setYoutubeCookies(payload.youtubeCookies ?? null);
+  }
+
+  async function saveYouTubeCookies(cookies: string) {
+    const response = await fetch("/api/youtube-cookies", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ cookies })
+    });
+    const payload = (await response.json()) as {
+      youtubeCookies?: YouTubeCookieStatus;
+      error?: string;
+    };
+    if (!response.ok || !payload.youtubeCookies) {
+      throw new Error(payload.error || "Could not save YouTube cookies.");
+    }
+    setYoutubeCookies(payload.youtubeCookies);
+  }
+
+  async function deleteYouTubeCookies() {
+    const response = await fetch("/api/youtube-cookies", { method: "DELETE" });
+    const payload = (await response.json()) as {
+      youtubeCookies?: YouTubeCookieStatus;
+      error?: string;
+    };
+    if (!response.ok || !payload.youtubeCookies) {
+      throw new Error(payload.error || "Could not delete YouTube cookies.");
+    }
+    setYoutubeCookies(payload.youtubeCookies);
+  }
+
   async function startCheckout(action: "credits" | "recurring" | "setup", packId?: "starter" | "studio") {
     const response = await fetch("/api/billing/checkout", {
       method: "POST",
@@ -557,6 +601,10 @@ export default function Home() {
             onCheckout={startCheckout}
             onPortal={openBillingPortal}
             onBillingSettings={updateBillingSettings}
+            youtubeCookies={youtubeCookies}
+            onSaveYouTubeCookies={saveYouTubeCookies}
+            onDeleteYouTubeCookies={deleteYouTubeCookies}
+            flashToast={flashToast}
           />
         ) : null}
 
@@ -647,6 +695,10 @@ function ComposeView(props: {
   onCheckout: (action: "credits" | "recurring" | "setup", packId?: "starter" | "studio") => void;
   onPortal: () => void;
   onBillingSettings: (settings: { autoRefillEnabled?: boolean; recurringEnabled?: boolean }) => void;
+  youtubeCookies: YouTubeCookieStatus | null;
+  onSaveYouTubeCookies: (cookies: string) => Promise<void>;
+  onDeleteYouTubeCookies: () => Promise<void>;
+  flashToast: (message: string) => void;
 }) {
   const hasInput = props.url.trim().length > 0;
   const showHint = hasInput && !props.videoId;
@@ -865,6 +917,15 @@ function ComposeView(props: {
       />
 
       {props.user ? (
+        <YouTubeCookiesPanel
+          status={props.youtubeCookies}
+          onSave={props.onSaveYouTubeCookies}
+          onDelete={props.onDeleteYouTubeCookies}
+          flashToast={props.flashToast}
+        />
+      ) : null}
+
+      {props.user ? (
         <SavedList
           saved={props.saved}
           loading={props.savedLoading}
@@ -1009,6 +1070,117 @@ function Feature({ title, body }: { title: string; body: string }) {
 
 function money(cents: number): string {
   return `$${(cents / 100).toFixed(2)}`;
+}
+
+function YouTubeCookiesPanel(props: {
+  status: YouTubeCookieStatus | null;
+  onSave: (cookies: string) => Promise<void>;
+  onDelete: () => Promise<void>;
+  flashToast: (message: string) => void;
+}) {
+  const [cookies, setCookies] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function loadFile(file: File | null) {
+    if (!file) return;
+    setCookies(await file.text());
+  }
+
+  async function save() {
+    setBusy(true);
+    setError("");
+    try {
+      await props.onSave(cookies);
+      setCookies("");
+      props.flashToast("YouTube cookies saved");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not save YouTube cookies.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function remove() {
+    setBusy(true);
+    setError("");
+    try {
+      await props.onDelete();
+      props.flashToast("YouTube cookies removed");
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Could not remove YouTube cookies.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const updatedAt = props.status?.updatedAt
+    ? new Date(props.status.updatedAt).toLocaleString(undefined, {
+        month: "short",
+        day: "numeric",
+        hour: "numeric",
+        minute: "2-digit"
+      })
+    : null;
+
+  return (
+    <section className="youtube-cookies-panel">
+      <div className="youtube-cookies-copy">
+        <span className="billing-kicker">YouTube session</span>
+        <strong>
+          {props.status?.configured
+            ? `${props.status.cookieCount} cookies saved`
+            : "Add your YouTube cookies"}
+        </strong>
+        <p>
+          Some public videos require a signed-in YouTube browser session before the server can read
+          them. Export a Netscape cookies.txt file from the browser where YouTube works, then paste
+          it here. The export is encrypted and used only for your analyses.
+        </p>
+        {updatedAt ? <span className="youtube-cookies-meta">Updated {updatedAt}</span> : null}
+      </div>
+
+      <div className="youtube-cookies-steps">
+        <ol>
+          <li>Install a cookies.txt exporter extension for your browser.</li>
+          <li>Open youtube.com while signed in, then export cookies for the current site.</li>
+          <li>Paste the Netscape cookies.txt contents below, or choose the exported file.</li>
+        </ol>
+        <input
+          type="file"
+          accept=".txt,text/plain"
+          onChange={(event) => void loadFile(event.target.files?.[0] ?? null)}
+        />
+        <textarea
+          value={cookies}
+          onChange={(event) => setCookies(event.target.value)}
+          placeholder="# Netscape HTTP Cookie File"
+          spellCheck={false}
+        />
+        {error ? <p className="auth-mini-error">{error}</p> : null}
+        <div className="youtube-cookies-actions">
+          <button
+            type="button"
+            className="btn btn-primary btn-sm"
+            disabled={busy || !cookies.trim()}
+            onClick={() => void save()}
+          >
+            Save cookies
+          </button>
+          {props.status?.configured ? (
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              disabled={busy}
+              onClick={() => void remove()}
+            >
+              Remove saved cookies
+            </button>
+          ) : null}
+        </div>
+      </div>
+    </section>
+  );
 }
 
 function BillingPanel(props: {

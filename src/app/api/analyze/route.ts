@@ -5,7 +5,7 @@ import { z } from "zod/v4";
 
 import type { AnalyzeResult } from "../../result-types";
 import { analyzeYoutubeTranscript, analyzeYoutubeVideo } from "../../../core/analyze";
-import type { ProgressEvent } from "../../../core/types";
+import type { ProgressEvent, YtDlpAuthOptions } from "../../../core/types";
 import { userFromRequest } from "../../../server/auth";
 import { getVideoInfo } from "../../../core/download";
 import { uploadAnalysisArtifacts } from "../../../server/blob-artifacts";
@@ -20,6 +20,7 @@ import {
 import { estimateExtractionCostCents } from "../../../server/pricing";
 import { autoRefillIfNeeded } from "../../../server/stripe";
 import { saveVideo } from "../../../server/videos";
+import { writeYouTubeCookieFileForUser } from "../../../server/youtube-cookies";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
@@ -132,12 +133,14 @@ function messageOf(error: unknown): string {
  */
 async function runAnalysis(
   body: AnalyzeRequest,
-  onProgress?: (event: ProgressEvent) => void
+  onProgress?: (event: ProgressEvent) => void,
+  ytDlpAuth?: YtDlpAuthOptions
 ): Promise<AnalyzeResult> {
   const result = await analyzeYoutubeVideo({
     ...body,
     // Vercel and most hosts only allow writes under the OS temp dir.
     outputDir: path.join(os.tmpdir(), "yt2ctx-web"),
+    ytDlpAuth,
     onProgress
   });
   return uploadAnalysisArtifacts(result);
@@ -145,11 +148,13 @@ async function runAnalysis(
 
 async function runTextExtraction(
   body: AnalyzeRequest,
-  onProgress?: (event: ProgressEvent) => void
+  onProgress?: (event: ProgressEvent) => void,
+  ytDlpAuth?: YtDlpAuthOptions
 ): Promise<AnalyzeResult> {
   const result = await analyzeYoutubeTranscript({
     ...body,
     outputDir: path.join(os.tmpdir(), "yt2ctx-web"),
+    ytDlpAuth,
     onProgress
   });
   return uploadAnalysisArtifacts(result);
@@ -192,8 +197,12 @@ export async function POST(request: Request) {
   }
 
   let grant: UsageGrant;
+  let userCookieFile: Awaited<ReturnType<typeof writeYouTubeCookieFileForUser>> = null;
+  let ytDlpAuth: YtDlpAuthOptions | undefined;
   try {
-    const info = await getVideoInfo(body.url);
+    userCookieFile = user ? await writeYouTubeCookieFileForUser(user) : null;
+    ytDlpAuth = userCookieFile ? { cookies: userCookieFile.cookies } : undefined;
+    const info = await getVideoInfo(body.url, ytDlpAuth);
     const durationSeconds = info.durationSeconds || 0;
     grant = await authorizeExtraction({
       user,
@@ -209,6 +218,7 @@ export async function POST(request: Request) {
       })
     });
   } catch (error) {
+    await userCookieFile?.cleanup();
     const response = NextResponse.json({ error: messageOf(error) }, { status: 402 });
     if (!existingAnonymousId) response.headers.append("Set-Cookie", anonymousCookieHeader(anonymousId));
     return response;
@@ -232,7 +242,9 @@ export async function POST(request: Request) {
   if (!wantsStream) {
     try {
       const result =
-        body.extractionKind === "text" ? await runTextExtraction(body) : await runAnalysis(body);
+        body.extractionKind === "text"
+          ? await runTextExtraction(body, undefined, ytDlpAuth)
+          : await runAnalysis(body, undefined, ytDlpAuth);
       const withBilling = attachBilling(result);
       const video = user ? await saveVideo(user, withBilling, parseYouTubeId(body.url)) : null;
       if (user) await autoRefillIfNeeded(user).catch(() => undefined);
@@ -242,6 +254,8 @@ export async function POST(request: Request) {
     } catch (error) {
       await refundUsageGrant(grant);
       return NextResponse.json({ error: messageOf(error) }, { status: 400 });
+    } finally {
+      await userCookieFile?.cleanup();
     }
   }
 
@@ -261,8 +275,16 @@ export async function POST(request: Request) {
       try {
         const payload =
           body.extractionKind === "text"
-            ? await runTextExtraction(body, (event) => send({ type: "progress", ...event }))
-            : await runAnalysis(body, (event) => send({ type: "progress", ...event }));
+            ? await runTextExtraction(
+                body,
+                (event) => send({ type: "progress", ...event }),
+                ytDlpAuth
+              )
+            : await runAnalysis(
+                body,
+                (event) => send({ type: "progress", ...event }),
+                ytDlpAuth
+              );
         const withBilling = attachBilling(payload);
         const video = user ? await saveVideo(user, withBilling, parseYouTubeId(body.url)) : null;
         if (user) await autoRefillIfNeeded(user).catch(() => undefined);
@@ -271,6 +293,7 @@ export async function POST(request: Request) {
         await refundUsageGrant(grant);
         send({ type: "error", message: messageOf(error) });
       } finally {
+        await userCookieFile?.cleanup();
         closed = true;
         controller.close();
       }
